@@ -2,26 +2,26 @@ import discord
 from discord.ext import commands
 import datetime
 
-client = commands.Bot( command_prefix = "!" )
-client.remove_command( help )
+Bot = commands.Bot( command_prefix = "!" )
+Bot.remove_command( help )
 
 @hello_words = [ "hello", "hi", "привет" ]
 answer_words = [ "serverinfo", "commands" ]
 goodbye_words = [ "пока", "удачи" ]
 
 
-@client.event
+@BotBot.event
 
 async def on_ready():
 	print( "Bot connected" )
 
-@client.command( pass_context = True )
+@Bot.command( pass_context = True )
 @commands.has_permisions( administrator = True )
 
 async def clear( ctx, amount = 100 ):
 	await ctx.channel.purge( limit = amount )
 
-@client.command( pass_context = True )
+@Bot.command( pass_context = True )
 
 async def hello( ctx, amount = 1 ):
 	await ctx.channel.purge( limit = amount )
@@ -29,14 +29,14 @@ async def hello( ctx, amount = 1 ):
 	author = ctx.message.author
 	await ctx.send( f"Hello { author.mention }" )
 
-	@client.command( pass_context = True )
+	@Bot.command( pass_context = True )
 
 async def hello( ctx ):
 	author = ctx.message.author
 
 	await ctx.send( "Hello. Im a bot for discord" )
 
-@client.event
+@Bot.event
 
 async def on_message( message ):
 	msg = message.content.lower()
@@ -49,7 +49,7 @@ async def on_message( message ):
     if msg in goodbye_words:
     	await message.channel.send( "Удачи тебе!" )
 
-@client.command( pass_context = True )
+@Bot.command( pass_context = True )
 @commands.has_permisions( administrator = True )
 
 async def kick( ctx, member: discord.Member, *, reason = None ):
@@ -58,7 +58,7 @@ async def kick( ctx, member: discord.Member, *, reason = None ):
 	await member.kick( reason = reason )
 	await ctx.send( f"kick user { member.mention }" )
 
-@client.command( pass_context = True )
+@Bot.command( pass_context = True )
 @commands.has_permisions( administrator = True )
 
 async def ban( ctx, member: discord.Member, *, reason = None ):
@@ -74,7 +74,7 @@ async def ban( ctx, member: discord.Member, *, reason = None ):
 
 	await ctx.send( f"ban user { member.mention }" )
 
-@client.command( pass_context = True )
+@Bot.command( pass_context = True )
 @commands.has_permisions( administrator = True )
 
 async def unban( ctx, *, member ):
@@ -91,7 +91,7 @@ async def unban( ctx, *, member ):
 		return
 
 
-@client.command( pass_context = True )
+@Bot.command( pass_context = True )
 @commands.has_permisions( administrator = True )
 
 async def help( ctx ):
@@ -105,7 +105,7 @@ async def help( ctx ):
 
 	await ctx.send( embed = emb )
 
-@client.command( pass_context = True )
+@Bot.command( pass_context = True )
 @commands.has_permisions( administrator = True )
 
 async def embed_message( ctx ):
@@ -121,7 +121,7 @@ async def embed_message( ctx ):
 
 	await ctx.send( embed = emb )
 
-@client.command()
+@Bot.command()
 @commands.has_permisions( administrator = True )
 
 async def user_mute( ctx, member: discord.Member ):
