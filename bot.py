@@ -144,5 +144,7 @@ async def user_mute( ctx, member: discord.Member ):
 
 token = open( f" { author.mention }  token.txt", "r" ).readline()
 
-token = os.environ.get( "token" )
-client.run(str(token))
+token = os.environ.get( "BOT_TOKEN" )
+
+
+bot.run(str(token))
