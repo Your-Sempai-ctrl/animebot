@@ -1,27 +1,35 @@
 import discord
+from random import radiant, choice
 from discord.ext import commands
-import datetime
+import datetime, pyown
+import speech_recognition as sr
+from discord.utils import get
+import youtube_dl
 
-Bot = commands.Bot( command_prefix = "!" )
-Bot.remove_command( help )
+import os
+
+client = commands.Bot( command_prefix = "!" )
+client.remove_command( "help" )
 
 @hello_words = [ "hello", "hi", "привет" ]
 answer_words = [ "serverinfo", "commands" ]
 goodbye_words = [ "пока", "удачи" ]
 
 
-@BotBot.event
+@clientBot.event
 
 async def on_ready():
 	print( "Bot connected" )
 
-@Bot.command( pass_context = True )
+	await client.change_presense( status = discord.Status.online, activity = discord.Game( "Personal Bot, Prefix - !" ) )
+
+@client.command( pass_context = True )
 @commands.has_permisions( administrator = True )
 
-async def clear( ctx, amount = 100 ):
+async def clear( ctx, amount : int ):
 	await ctx.channel.purge( limit = amount )
 
-@Bot.command( pass_context = True )
+@client.command( pass_context = True )
 
 async def hello( ctx, amount = 1 ):
 	await ctx.channel.purge( limit = amount )
@@ -29,14 +37,14 @@ async def hello( ctx, amount = 1 ):
 	author = ctx.message.author
 	await ctx.send( f"Hello { author.mention }" )
 
-	@Bot.command( pass_context = True )
+	@client.command( pass_context = True )
 
 async def hello( ctx ):
 	author = ctx.message.author
 
 	await ctx.send( "Hello. Im a bot for discord" )
 
-@Bot.event
+@client.event
 
 async def on_message( message ):
 	msg = message.content.lower()
@@ -49,7 +57,7 @@ async def on_message( message ):
     if msg in goodbye_words:
     	await message.channel.send( "Удачи тебе!" )
 
-@Bot.command( pass_context = True )
+@client.command( pass_context = True )
 @commands.has_permisions( administrator = True )
 
 async def kick( ctx, member: discord.Member, *, reason = None ):
@@ -58,7 +66,7 @@ async def kick( ctx, member: discord.Member, *, reason = None ):
 	await member.kick( reason = reason )
 	await ctx.send( f"kick user { member.mention }" )
 
-@Bot.command( pass_context = True )
+@client.command( pass_context = True )
 @commands.has_permisions( administrator = True )
 
 async def ban( ctx, member: discord.Member, *, reason = None ):
@@ -74,7 +82,7 @@ async def ban( ctx, member: discord.Member, *, reason = None ):
 
 	await ctx.send( f"ban user { member.mention }" )
 
-@Bot.command( pass_context = True )
+@client.command( pass_context = True )
 @commands.has_permisions( administrator = True )
 
 async def unban( ctx, *, member ):
@@ -91,7 +99,7 @@ async def unban( ctx, *, member ):
 		return
 
 
-@Bot.command( pass_context = True )
+@client.command( pass_context = True )
 @commands.has_permisions( administrator = True )
 
 async def help( ctx ):
@@ -105,7 +113,7 @@ async def help( ctx ):
 
 	await ctx.send( embed = emb )
 
-@Bot.command( pass_context = True )
+@client.command( pass_context = True )
 @commands.has_permisions( administrator = True )
 
 async def embed_message( ctx ):
@@ -121,7 +129,7 @@ async def embed_message( ctx ):
 
 	await ctx.send( embed = emb )
 
-@Bot.command()
+@client.command()
 @commands.has_permisions( administrator = True )
 
 async def user_mute( ctx, member: discord.Member ):
@@ -139,12 +147,91 @@ async def user_mute( ctx, member: discord.Member ):
 	emb.set_image( url = "https://media.discordapp.net/attachments/737337744589717546/737597147112800256/39c2f54e8d825cc615089333efd0d06f.gif" )
 	emb.set_thumbnail( url = "https://images-ext-1.discordapp.net/external/kukM0K71CpZmai_qaLupXIFLoqUy_QZwVNXsaeRHsUw/https/cdn.discordapp.com/avatars/488027799987421211/7fdde727b8b22dfd9bf320a8876bd8f9.png" )
 
+@client.event
+
+async def on_member_join( member ):
+	channel = client.get_channel( 732121529105645608 )
+
+	role = discord.utils.get( member.guild.roles, id = 733300789484978247 )
+
+	await member.add_roles( role )
+
+@client.event
+async def on_command_error( ctx, error ):
+	pass
 
 
+@clear.error
+async def clear_error( ctx, error ):
+	if isinstance( error, commands.MissingRequiredArgument ):
+		await ctx.send( f"{ ctx.author.name }, обязательно укажите число удаляемых сообщений!" )
 
-token = open( f" { author.mention }  token.txt", "r" ).readline()
+	if isinstance( error, commands.MissingPermissions ):
+		await ctx.send( f"{ ctx.author.name }, у вас нет прав администратора" )
 
-token = os.environ.get( "BOT_TOKEN" )
+@client.command()
+async def join(ctx):
+	global voice
+	channel = ctx.message.author.voice.channel
+	voice = get(client.voice_clients, guild = ctx.guild)
+
+	if voice and voice.is_connected():
+		await voice.move_to(channel)
+	else:
+		voice = await channel.connect()
+
+@client.command()
+async def leave(ctx):
+	channel = ctx.message.author.voice.channel
+	voice = get(client.voice_clients, guild = ctx.guild)
+
+	if voice and voice.is_connected():
+		await voice.disconnected()
+	else:
+		voice = await channel.connect()
+
+@client.command()
+async def play(ctx, url : str):
+	song_there = os.path.isfile("song.mp3")
+
+	try:
+		if song_there:
+			os.remove("song.mp3")
+			print("[log] Старый файл удален ")
+	except PermissionError:
+		print("[log] Не удалось удалить файл ")
+
+	await ctx.send("Пожалуйста ожидайте")
+
+	voice = get(client.voice_clients, guild = ctx.guild)
+
+	ydl_opts = {
+        "format" : "bestaudio/best",
+        "postprocessors" : [{
+        	"key" : "FFmpegExtractAudio",
+        	"preferredcodec" : "mp3",
+        	"preferredquality" : "192"
+        }],
+	}
+
+	with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+		print("[log] Загружаю Музыку...")
+		ydl.download([url])
+
+	for file in os.listdir("./"):
+		if file.endswith("mp3"):
+			name = file
+			print("[log] Переименовываю файл : {file}")
+			os.rename(file, "song.mp3")
+
+	voice.play(discord.FFmpegPCMAudio("song.mp3"), after = lambda e : print(f"[log] {name}, музыка закончила своё проигрывание"))
+	voice.source = discord.PCMVolumeTransformer(voice.source)
+	voice.source.volume = 0.07
+
+	song_name = name.rsplit("-", 2)
+	await ctx.send(f"Сейчас проигрывает музыка: {song_name[0]}")
+
+token = open( "token.txt", "r" ).readline()
 
 
-bot.run(str(token))
+client.run( token )
