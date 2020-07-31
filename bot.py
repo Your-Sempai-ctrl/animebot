@@ -231,7 +231,9 @@ async def play(ctx, url : str):
 	song_name = name.rsplit("-", 2)
 	await ctx.send(f"Сейчас проигрывает музыка: {song_name[0]}")
 
-token = open( "token.txt", "r" ).readline()
+token = os.environ.get("BOT_TOKEN")
+
+bot.run(str(token))
 
 
-client.run( token )
+
